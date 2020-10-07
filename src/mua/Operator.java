@@ -65,6 +65,77 @@ public enum Operator {
             return String.valueOf(Double.parseDouble(args.get(0)) % Double.parseDouble(args.get(1)));
         }
     },
+    ERASE("erase", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            return Variable.removeMap(args.get(0));
+        }
+    },
+    ISNAME("isname", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            return Variable.exsitKey(args.get(0));
+        }
+    },
+    // 读取表
+    READLIST("readlist", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            return args.get(0);
+        }
+    },
+    // REPEAT("repeat", 2) {
+    // @Override
+    // public String execute(ArrayList<String> args) {
+    // for (int i = 0; i < Integer.parseInt(args.get(0)); i++) {
+    // Parser.
+    // }
+    // }
+    // },
+    EQUAL("eq", 2) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            return String.valueOf(args.get(0).equals(args.get(1)));
+        }
+    },
+    GREATERTHAN("gt", 2) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            int result = args.get(0).compareTo(args.get(1));
+            if (result > 0)
+                return String.valueOf(true);
+            else
+                return String.valueOf(false);
+        }
+    },
+    LESSTHAN("lt", 2) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            int result = args.get(0).compareTo(args.get(1));
+            if (result < 0)
+                return String.valueOf(true);
+            else
+                return String.valueOf(false);
+        }
+    },
+    AND("and", 2) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            return String.valueOf(Boolean.parseBoolean(args.get(0)) && Boolean.parseBoolean(args.get(1)));
+        }
+    },
+    OR("or", 2) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            return String.valueOf(Boolean.parseBoolean(args.get(0)) || Boolean.parseBoolean(args.get(1)));
+        }
+    },
+    NOT("not", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            return String.valueOf(!Boolean.parseBoolean(args.get(0)));
+        }
+    },
     OTHER("", 0) {
         @Override
         public String execute(ArrayList<String> args) {

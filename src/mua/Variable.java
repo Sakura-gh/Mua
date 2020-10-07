@@ -17,4 +17,14 @@ public class Variable {
     public static void addMap(String key, String value) {
         Variable.variablePool.put(key, value);
     }
+
+    public static String removeMap(String key) {
+        String value = Variable.variablePool.get(key);
+        Variable.variablePool.remove(key);
+        return value;
+    }
+
+    public static String exsitKey(String key) {
+        return String.valueOf(Variable.variablePool.containsKey(key));
+    }
 }
