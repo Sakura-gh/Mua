@@ -1,56 +1,62 @@
 package mua;
 
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.Arrays;
+import java.util.Iterator;
 
-public class Parser {
-    private static Scanner in;
+public class ListParser {
+    // /////////////FOR LIST//////////////////////////////////////////////////
+    public static String ParserFromList(String list) {
+        ArrayList<String> words = new ArrayList<>(
+                Arrays.asList(list.substring(1, list.length() - 1).trim().split("\\s+")));
+        Iterator it = words.iterator();
+        String word = "";
+        String result = "";
 
-    // 设置输入，必须先做这一步才能执行后续函数！
-    public static void setScannerIn(Scanner in) {
-        Parser.in = in;
-    }
-
-    // 从terminal读入命令并进行语法解析与执行
-    public static void ParserFromTerminal() {
-        String word;
-        word = Parser.in.next();
-        while (!word.equals("exit")) {
-            Parser.exec(word);
-            if (Parser.in.hasNext())
-                word = Parser.in.next();
-            else
-                break;
+        // 如果列表不为空，则读取第一个word；否则直接返回空串
+        if (!it.hasNext())
+            return word;
+        else {
+            word = (String) it.next();
+            while (!word.equals("exit")) {
+                result = ListParser.exec(word, it);
+                if (it.hasNext())
+                    word = (String) it.next();
+                else
+                    break;
+            }
         }
+        return result;
     }
 
-    // 根据符号来解析操作符，并根据操作符读入所需的操作数，调用Operator进行运算并返回结果
-    public static String exec(String symbol) {
+    // repeat 1 [repeat 3 [print [add 1 2]]]会有问题，
+    // 前面的repeat是通过Parser解析的，因此list作为参数整个传入，
+    // 但后面的repeat是通过ListParser解析的，list表会被直接解出值，然后变成 repeat 3 3，造成error
+    // 想要解决这个问题，list中就不能放repeat，或者把Parser的方式统一
+    public static String exec(String symbol, Iterator it) {
         Operator op = Operator.getOperator(symbol);
         int argNum = op.getArgNum();
         ArrayList<String> args = new ArrayList<>();
         String word, arg;
 
         for (int i = 0; i < argNum; i++) {
-            word = Parser.readNext();
-            arg = parse(word);
+            word = ListParser.readNext(it);
+            arg = parse(word, it);
             args.add(arg);
         }
 
         return op.execute(args);
     }
 
-    // 用于读取一个基本数据单元，可能是word、number、bool或list
-    // 这里主要是为了读取list写的函数，根据"["和"]"个数是否相等来判断是否读取完毕，即表平衡
-    public static String readNext() {
+    public static String readNext(Iterator it) {
         // 只有list需要进行多次读取
-        String word = Parser.in.next();
+        String word = (String) it.next();
         String wordBuffer = "";
         int num = 0;
         if (word.charAt(0) == '[') {
             num++;
             while (num != 0) {
-                wordBuffer = Parser.in.next();
+                wordBuffer = (String) it.next();
                 if (wordBuffer.contains("[")) {
                     num += Parser.countSymbolNum(wordBuffer, "[");
                 } else if (wordBuffer.contains("]")) {
@@ -62,13 +68,8 @@ public class Parser {
         return word;
     }
 
-    // 返回字符串S中包含符号c的个数
-    public static int countSymbolNum(String s, String c) {
-        return s.length() - s.replace(c, "").length();
-    }
-
     // 可能参数是一个操作的返回结果，因此需要解析处理
-    public static String parse(String word) {
+    public static String parse(String word, Iterator it) {
         // use Parser.in to read
         String arg = "";
         // 如果是"标记的字面量，则从第2个字符开始的子串作为参数传入arg
@@ -89,16 +90,16 @@ public class Parser {
         }
         // 如果是操作，则执行操作并把执行结果传入arg中
         else if (Character.isLowerCase(word.charAt(0)) && !word.equals("true") && !word.equals("false")) {
-            arg = Parser.exec(word);
+            arg = ListParser.exec(word, it);
         }
         // 如果是list，连带着[]一起传入arg中
         else if (word.charAt(0) == '[') {
-            arg = word;
+            arg = ListParser.ParserFromList(word);
         } else {
             throw new IllegalArgumentException();
         }
 
         return arg;
     }
-
+    // /////////////FOR LIST//////////////////////////////////////////////////
 }

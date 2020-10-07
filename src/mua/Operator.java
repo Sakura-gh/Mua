@@ -84,14 +84,16 @@ public enum Operator {
             return args.get(0);
         }
     },
-    // REPEAT("repeat", 2) {
-    // @Override
-    // public String execute(ArrayList<String> args) {
-    // for (int i = 0; i < Integer.parseInt(args.get(0)); i++) {
-    // Parser.
-    // }
-    // }
-    // },
+    REPEAT("repeat", 2) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            String result = "";
+            for (int i = 0; i < Integer.parseInt(args.get(0)); i++) {
+                result = ListParser.ParserFromList(args.get(1));
+            }
+            return result;
+        }
+    },
     EQUAL("eq", 2) {
         @Override
         public String execute(ArrayList<String> args) {
