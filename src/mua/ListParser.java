@@ -9,7 +9,7 @@ public class ListParser {
     public static String ParserFromList(String list) {
         ArrayList<String> words = new ArrayList<>(
                 Arrays.asList(list.substring(1, list.length() - 1).trim().split("\\s+")));
-        Iterator it = words.iterator();
+        Iterator<String> it = words.iterator();
         String word = "";
         String result = "";
 
@@ -20,11 +20,11 @@ public class ListParser {
         else if (words.size() == 1 && words.get(0).equals(""))
             result = "[]";
         else {
-            word = (String) it.next();
+            word = it.next();
             while (!word.equals("exit")) {
                 result = ListParser.exec(word, it);
                 if (it.hasNext())
-                    word = (String) it.next();
+                    word = it.next();
                 else
                     break;
             }
@@ -36,7 +36,7 @@ public class ListParser {
     // 前面的repeat是通过Parser解析的，因此list作为参数整个传入，
     // 但后面的repeat是通过ListParser解析的，list表会被直接解出值，然后变成 repeat 3 3，造成error
     // 想要解决这个问题，list中就不能放repeat，或者把Parser的方式统一
-    public static String exec(String symbol, Iterator it) {
+    public static String exec(String symbol, Iterator<String> it) {
         Operator op = Operator.getOperator(symbol);
 
         // 如果symbol是非OP，则直接返回symbol本身的值
@@ -57,9 +57,9 @@ public class ListParser {
         return op.execute(args);
     }
 
-    public static String readNext(Iterator it) {
+    public static String readNext(Iterator<String> it) {
         // 只有list需要进行多次读取
-        String word = (String) it.next();
+        String word = it.next();
         String wordBuffer = "";
         int num = 0;
 
@@ -67,10 +67,12 @@ public class ListParser {
         num = Parser.countSymbolNum(word, "[") - Parser.countSymbolNum(word, "]");
 
         while (num != 0) {
-            wordBuffer = (String) it.next();
+            wordBuffer = it.next();
             if (wordBuffer.contains("[")) {
                 num += Parser.countSymbolNum(wordBuffer, "[");
-            } else if (wordBuffer.contains("]")) {
+            }
+            // 不能用else，可能wordBuffer里同时有"["和"]"
+            if (wordBuffer.contains("]")) {
                 num -= Parser.countSymbolNum(wordBuffer, "]");
             }
             word += " " + wordBuffer;
@@ -80,7 +82,7 @@ public class ListParser {
     }
 
     // 可能参数是一个操作的返回结果，因此需要解析处理
-    public static String parse(String word, Iterator it) {
+    public static String parse(String word, Iterator<String> it) {
         // use Parser.in to read
         String arg = "";
         // 如果是"标记的字面量，则从第2个字符开始的子串作为参数传入arg
