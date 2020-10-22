@@ -14,8 +14,9 @@ public class ListParser {
         String result = "";
 
         // 如果列表不为空，则读取第一个word；否则直接返回空串
+        // try 返回空表[]而不是返回空串
         if (!it.hasNext())
-            return word;
+            return "[]";
         else {
             word = (String) it.next();
             while (!word.equals("exit")) {
@@ -35,6 +36,12 @@ public class ListParser {
     // 想要解决这个问题，list中就不能放repeat，或者把Parser的方式统一
     public static String exec(String symbol, Iterator it) {
         Operator op = Operator.getOperator(symbol);
+
+        // 如果symbol是非OP，则直接返回symbol本身的值
+        if (op.name().equals("OTHER")) {
+            return symbol;
+        }
+
         int argNum = op.getArgNum();
         ArrayList<String> args = new ArrayList<>();
         String word, arg;

@@ -27,6 +27,12 @@ public class Parser {
     // 根据符号来解析操作符，并根据操作符读入所需的操作数，调用Operator进行运算并返回结果
     public static String exec(String symbol) {
         Operator op = Operator.getOperator(symbol);
+
+        // 如果symbol是非OP，则直接返回symbol本身的值
+        if (op.name().equals("OTHER")) {
+            return symbol;
+        }
+
         int argNum = op.getArgNum();
         ArrayList<String> args = new ArrayList<>();
         String word, arg;
@@ -47,18 +53,21 @@ public class Parser {
         String word = Parser.in.next();
         String wordBuffer = "";
         int num = 0;
-        if (word.charAt(0) == '[') {
-            num++;
-            while (num != 0) {
-                wordBuffer = Parser.in.next();
-                if (wordBuffer.contains("[")) {
-                    num += Parser.countSymbolNum(wordBuffer, "[");
-                } else if (wordBuffer.contains("]")) {
-                    num -= Parser.countSymbolNum(wordBuffer, "]");
-                }
-                word += " " + wordBuffer;
+
+        // 注意，读入的第一个word本身可能含有多个”[“和”]“，因此首先初始化num为两者的个数差，再做表平衡
+        num = countSymbolNum(word, "[") - countSymbolNum(word, "]");
+
+        // 如果num不等于0，说明word中的"["和"]"个数不平衡，需要继续读取直至表中的"["和"]"个数平衡
+        while (num != 0) {
+            wordBuffer = Parser.in.next();
+            if (wordBuffer.contains("[")) {
+                num += Parser.countSymbolNum(wordBuffer, "[");
+            } else if (wordBuffer.contains("]")) {
+                num -= Parser.countSymbolNum(wordBuffer, "]");
             }
+            word += " " + wordBuffer;
         }
+
         return word;
     }
 

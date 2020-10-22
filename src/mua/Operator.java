@@ -84,12 +84,34 @@ public enum Operator {
             return args.get(0);
         }
     },
+    RUN("run", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            String result = "";
+            result = ListParser.ParserFromList(args.get(0));
+            return result;
+        }
+    },
     REPEAT("repeat", 2) {
         @Override
         public String execute(ArrayList<String> args) {
             String result = "";
             for (int i = 0; i < Integer.parseInt(args.get(0)); i++) {
                 result = ListParser.ParserFromList(args.get(1));
+            }
+            return result;
+        }
+    },
+    IF("if", 3) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            String result = "";
+            // 如果bool为true，返回第一个列表的返回值
+            if (args.get(0).equals("true")) {
+                result = args.get(1);
+                // 如果bool为false，返回第二个列表的返回值
+            } else {
+                result = args.get(2);
             }
             return result;
         }
