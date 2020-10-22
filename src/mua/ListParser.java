@@ -60,18 +60,20 @@ public class ListParser {
         String word = (String) it.next();
         String wordBuffer = "";
         int num = 0;
-        if (word.charAt(0) == '[') {
-            num++;
-            while (num != 0) {
-                wordBuffer = (String) it.next();
-                if (wordBuffer.contains("[")) {
-                    num += Parser.countSymbolNum(wordBuffer, "[");
-                } else if (wordBuffer.contains("]")) {
-                    num -= Parser.countSymbolNum(wordBuffer, "]");
-                }
-                word += " " + wordBuffer;
+
+        // 注意，读入的第一个word本身可能含有多个”[“和”]“，因此首先初始化num为两者的个数差，再做表平衡
+        num = Parser.countSymbolNum(word, "[") - Parser.countSymbolNum(word, "]");
+
+        while (num != 0) {
+            wordBuffer = (String) it.next();
+            if (wordBuffer.contains("[")) {
+                num += Parser.countSymbolNum(wordBuffer, "[");
+            } else if (wordBuffer.contains("]")) {
+                num -= Parser.countSymbolNum(wordBuffer, "]");
             }
+            word += " " + wordBuffer;
         }
+
         return word;
     }
 

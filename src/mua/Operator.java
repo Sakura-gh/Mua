@@ -108,10 +108,11 @@ public enum Operator {
             String result = "";
             // 如果bool为true，返回第一个列表的返回值
             if (args.get(0).equals("true")) {
-                result = args.get(1);
-                // 如果bool为false，返回第二个列表的返回值
-            } else {
-                result = args.get(2);
+                result = ListParser.ParserFromList(args.get(1));
+            }
+            // 如果bool为false，返回第二个列表的返回值
+            else {
+                result = ListParser.ParserFromList(args.get(2));
             }
             return result;
         }
