@@ -13,10 +13,12 @@ public class ListParser {
         String word = "";
         String result = "";
 
-        // 如果列表不为空，则读取第一个word；否则直接返回空串
-        // try 返回空表[]而不是返回空串
+        // 如果列表不为空，则读取第一个word；如果列表为空，words也还会有第一个元素为空串“”
+        // 如果列表为空，则返回"[]"
         if (!it.hasNext())
-            return "[]";
+            result = "";
+        else if (words.size() == 1 && words.get(0).equals(""))
+            result = "[]";
         else {
             word = (String) it.next();
             while (!word.equals("exit")) {

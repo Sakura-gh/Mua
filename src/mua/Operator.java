@@ -71,10 +71,66 @@ public enum Operator {
             return Variable.removeMap(args.get(0));
         }
     },
+    ISEMPTY("isempty", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            if (args.get(0).equals("") || args.get(0).equals("[]")) {
+                return String.valueOf(true);
+            } else {
+                return String.valueOf(false);
+            }
+        }
+    },
     ISNAME("isname", 1) {
         @Override
         public String execute(ArrayList<String> args) {
             return Variable.exsitKey(args.get(0));
+        }
+    },
+    ISNUMBER("isnumber", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            for (int i = 0; i < args.get(0).length(); i++) {
+                if (!Character.isDigit(args.get(0).charAt(i))) {
+                    return String.valueOf(false);
+                }
+            }
+            return String.valueOf(true);
+        }
+    },
+    ISWORD("isword", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            if (Boolean.valueOf(Variable.exsitKey(args.get(0)))) {
+                return String.valueOf(true);
+            } else {
+                return String.valueOf(false);
+            }
+        }
+    },
+    ISBOOL("isbool", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            if (args.get(0).equals("true") || args.get(0).equals("false")) {
+                return String.valueOf(true);
+            } else {
+                return String.valueOf(false);
+            }
+        }
+    },
+    ISLIST("islist", 1) {
+        @Override
+        public String execute(ArrayList<String> args) {
+            // 取出表参数
+            String arg = args.get(0);
+            // 首先保证表平衡
+            int num = Parser.countSymbolNum(arg, "[") - Parser.countSymbolNum(arg, "]");
+            // 其次保证首尾是list的标志位"["和"]"
+            if (arg.charAt(0) == '[' && arg.charAt(arg.length() - 1) == ']' && num == 0) {
+                return String.valueOf(true);
+            } else {
+                return String.valueOf(false);
+            }
         }
     },
     // 读取表
