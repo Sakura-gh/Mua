@@ -88,14 +88,26 @@ public enum Operator {
         }
     },
     ISNUMBER("isnumber", 1) {
+        // 需要用抛出异常来判断是否为int、double、float类型数字，而不能单纯扫描string里的每个字符(误判负号和小数点)
         @Override
         public String execute(ArrayList<String> args) {
-            for (int i = 0; i < args.get(0).length(); i++) {
-                if (!Character.isDigit(args.get(0).charAt(i))) {
-                    return String.valueOf(false);
+            String str = args.get(0);
+            try {
+                Integer.parseInt(str);
+                return String.valueOf(true);
+            } catch (NumberFormatException e1) {
+                try {
+                    Double.parseDouble(str);
+                    return String.valueOf(true);
+                } catch (NumberFormatException e2) {
+                    try {
+                        Float.parseFloat(str);
+                        return String.valueOf(true);
+                    } catch (NumberFormatException e3) {
+                        return String.valueOf(false);
+                    }
                 }
             }
-            return String.valueOf(true);
         }
     },
     ISWORD("isword", 1) {
