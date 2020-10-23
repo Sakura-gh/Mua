@@ -228,9 +228,11 @@ public class ExprParser {
 
         ArrayList<String> result = new ArrayList<>();
         // 检查如果出现负数，则与后面的数字合并
+        // 注意，考虑add 3 -2的情况，此时同样需要把负号与数字2合并，判断条件是：符号前存在操作名
         for (int i = 0; i < tmp_array.length; i++) {
             if (tmp_array[i].equals("-") && (i == 0 || tmp_array[i - 1].equals("(") || tmp_array[i - 1].equals("+")
-                    || tmp_array[i - 1].equals("*") || tmp_array.equals("/") || tmp_array[i - 1].equals("%"))) {
+                    || tmp_array[i - 1].equals("-") || tmp_array[i - 1].equals("*") || tmp_array.equals("/")
+                    || tmp_array[i - 1].equals("%") || (i >= 2 && Character.isLowerCase(tmp_array[i - 2].charAt(0))))) {
                 result.add(tmp_array[i] + tmp_array[i + 1]);
                 i += 1;
             } else {
