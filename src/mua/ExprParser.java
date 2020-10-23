@@ -197,25 +197,7 @@ public class ExprParser {
         return String.valueOf(final_result);
     }
 
-    // // 返回将运算符和运算数分隔处理完成后的字符串数组
-    // public static String[] preprocess(String expression) {
-    // String[] op = new String[] { "(", ")", "+", "-", "*", "/", "%" };
-    // // 去除两侧的额外括号()
-    // String tmp = expression.substring(1, expression.length() - 1);
-    // // 将运算符两侧加上额外的括号，以保证能够被split
-    // // 额外考虑负数的情况如3+-2，此时-2用 -1 * 2 代替，接着spilt即可将负数识别出
-    // for (String i : op) {
-    // if (i.equals("-"))
-    // tmp = tmp.replace(i, " -1 * ");
-    // else
-    // tmp = tmp.replace(i, " " + i + " ");
-    // }
-    // String[] result = tmp.trim().split("\\s+");
-
-    // return result;
-    // }
-
-    // 返回将运算符和运算数分隔处理完成后的字符串数组，该版本比较麻烦
+    // 返回将运算符和运算数分隔处理完成后的字符串数组，关于负数部分一定要单独处理
     public static ArrayList<String> preprocess(String expression) {
         // 将符号两侧加空格
         String[] op = new String[] { "(", ")", "+", "-", "*", "/", "%" };
