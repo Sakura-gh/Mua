@@ -108,6 +108,10 @@ public class ListParser {
         // 如果是list，连带着[]一起传入arg中
         else if (word.charAt(0) == '[') {
             arg = ListParser.ParserFromList(word);
+        }
+        // 如果是expression，则返回执行后的值
+        else if (word.charAt(0) == '(') {
+            arg = ExprParser.ParserFromExpression(word);
         } else {
             throw new IllegalArgumentException();
         }
