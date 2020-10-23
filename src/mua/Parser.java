@@ -59,7 +59,7 @@ public class Parser {
         }
         // 读取expression ()
         else if (word.charAt(0) == '(') {
-            word = Parser.symbolBalance(word, "(", ")", "");
+            word = Parser.symbolBalance(word, "(", ")", " ");
         }
 
         return word;
@@ -118,7 +118,8 @@ public class Parser {
         }
         // 如果是expression，则返回执行后的值
         else if (word.charAt(0) == '(') {
-            arg = ExprParser.parseInfix(word);
+            // arg = ExprParser.parseInfix(word); // 纯中缀表达式
+            arg = ExprParser.ParserFromExpression(word);
         }
         // 如果是list，连带着[]一起传入arg中
         else if (word.charAt(0) == '[') {
