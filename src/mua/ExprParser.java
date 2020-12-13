@@ -9,19 +9,25 @@ import java.util.regex.Pattern;
 
 // 基本思路：1.做一个纯中缀表达式的解析器；2.先把总表达式扫一遍，把前缀表达式做完(其中的中缀用前面的解析器求解)并转化为字符串中的运算数；再把剩余的中缀表达式求解
 public class ExprParser {
-    public static String ParserFromExpression(String expression) {
-        String infix_expr = parsePrefix(expression);
-        String result = parseInfix(infix_expr);
+    private Variable globalVariable;
+
+    public ExprParser(Variable globalVariable) {
+        this.globalVariable = globalVariable;
+    }
+
+    public String ParserFromExpression(String expression, Variable variable) {
+        String infix_expr = parsePrefix(expression, variable);
+        String result = parseInfix(infix_expr, variable);
 
         return result;
     }
 
-    public static String parsePrefix(String expression) {
+    public String parsePrefix(String expression, Variable variable) {
         // String tmp = expression.substring(1, expression.length() - 1);
         // tmp = tmp.replace("(", " ( ");
         // tmp = tmp.replace(")", " ) ");
         // ArrayList<String> list = new ArrayList<>(Arrays.asList(tmp.split("\\s+")));
-        ArrayList<String> list = ExprParser.preprocess(expression);
+        ArrayList<String> list = preprocess(expression);
         // ArrayList<String> result = new ArrayList<>();
         Iterator<String> it = list.iterator();
         String result = "";
@@ -32,7 +38,7 @@ public class ExprParser {
             word = it.next().trim();
             // 遇到前缀就执行
             if (Character.isLowerCase(word.charAt(0))) {
-                result += " " + ExprParser.exec(word, it) + " ";
+                result += " " + exec(word, it, variable) + " ";
             } else if (!word.equals("")) {
                 result += " " + word + " ";
             }
@@ -40,7 +46,7 @@ public class ExprParser {
         return result;
     }
 
-    public static String exec(String symbol, Iterator<String> it) {
+    public String exec(String symbol, Iterator<String> it, Variable variable) {
         Operator op = Operator.getOperator(symbol);
 
         // 如果symbol是非OP，则直接返回symbol本身的值
@@ -53,31 +59,31 @@ public class ExprParser {
         String word, arg;
 
         for (int i = 0; i < argNum; i++) {
-            word = ExprParser.readNext(it);
-            arg = ExprParser.parse(word, it);
+            word = readNext(it);
+            arg = parse(word, it, variable);
             args.add(arg);
         }
-
-        return op.execute(args);
+        // 默认使用全局变量池解析
+        return op.execute(args, variable);
     }
 
-    public static String readNext(Iterator<String> it) {
+    public String readNext(Iterator<String> it) {
         // 只有list需要进行多次读取
         String word = it.next();
         String wordBuffer = "";
         int num = 0;
 
         // 注意，读入的第一个word本身可能含有多个”[“和”]“，因此首先初始化num为两者的个数差，再做表平衡
-        num = Parser.countSymbolNum(word, "(") - Parser.countSymbolNum(word, ")");
+        num = countSymbolNum(word, "(") - countSymbolNum(word, ")");
 
         while (num != 0) {
             wordBuffer = it.next();
             if (wordBuffer.contains("(")) {
-                num += Parser.countSymbolNum(wordBuffer, "(");
+                num += countSymbolNum(wordBuffer, "(");
             }
             // 不能用else，可能wordBuffer里同时有"["和"]"
             if (wordBuffer.contains(")")) {
-                num -= Parser.countSymbolNum(wordBuffer, ")");
+                num -= countSymbolNum(wordBuffer, ")");
             }
             word += " " + wordBuffer;
         }
@@ -85,12 +91,18 @@ public class ExprParser {
         return word;
     }
 
-    public static String parse(String word, Iterator<String> it) {
+    // 返回字符串S中包含符号c的个数
+    public int countSymbolNum(String s, String c) {
+        return s.length() - s.replace(c, "").length();
+    }
+
+    // 需要考虑在不同变量池下的解析
+    public String parse(String word, Iterator<String> it, Variable variable) {
         // use Parser.in to read
         String arg = "";
         // 如果是:标记的字面量，则取出该字面量的值作为参数传入arg
         if (word.charAt(0) == ':') {
-            arg = Variable.getValue(word.substring(1));
+            arg = variable.getValue(word.substring(1));
         }
         // 如果是数字(包含负数)，则直接作为参数传入arg
         else if (Character.isDigit(word.charAt(0)) || word.charAt(0) == '-') {
@@ -102,7 +114,7 @@ public class ExprParser {
         }
         // 如果是操作，则执行操作并把执行结果传入arg中
         else if (Character.isLowerCase(word.charAt(0)) && !word.equals("true") && !word.equals("false")) {
-            arg = ExprParser.exec(word, it);
+            arg = exec(word, it, variable);
         }
         // 如果是list，连带着[]一起传入arg中
         else if (word.charAt(0) == '(') {
@@ -111,11 +123,11 @@ public class ExprParser {
             Pattern p = Pattern.compile("(\\(|\\)|\\+|\\-|\\*|\\/|\\%|\\s)[a-zA-Z]+");
             Matcher m = p.matcher(word);
             if (m.find()) {
-                arg = ExprParser.ParserFromExpression(word);
+                arg = ParserFromExpression(word, variable);
             }
             // 如果没有前缀运算了，直接调用纯中缀运算，并计算出结果返回
             else {
-                arg = ExprParser.parseInfix(word);
+                arg = parseInfix(word, variable);
             }
         } else {
             throw new IllegalArgumentException();
@@ -125,7 +137,8 @@ public class ExprParser {
     }
 
     // 纯中缀解析器
-    public static String parseInfix(String expression) {
+    // 需要考虑在不同变量池下的解析
+    public String parseInfix(String expression, Variable variable) {
         // 保存split后的表达式
         ArrayList<String> expr = preprocess(expression);
 
@@ -146,7 +159,7 @@ public class ExprParser {
             // 如果扫描到字面量或数字，则直接压入数字栈
             if (op == ExprOp.OTHER) {
                 if (str.charAt(0) == ':') {
-                    numStack.push(Double.valueOf(Variable.getValue(str.substring(1))));
+                    numStack.push(Double.valueOf(variable.getValue(str.substring(1))));
                 } else {
                     numStack.push(Double.valueOf(str));
                 }
@@ -198,7 +211,7 @@ public class ExprParser {
     }
 
     // 返回将运算符和运算数分隔处理完成后的字符串数组，关于负数部分一定要单独处理
-    public static ArrayList<String> preprocess(String expression) {
+    public ArrayList<String> preprocess(String expression) {
         // 将符号两侧加空格
         String[] op = new String[] { "(", ")", "+", "-", "*", "/", "%" };
         String tmp = expression.substring(1, expression.length() - 1);
