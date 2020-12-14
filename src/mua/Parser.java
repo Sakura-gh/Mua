@@ -1,8 +1,6 @@
 package mua;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Scanner;
 
 public class Parser {
@@ -91,11 +89,8 @@ public class Parser {
             arg = parse(word, globalVariable);
             args.add(arg);
         }
-        // try {
+
         return op.execute(args, globalVariable);
-        // } catch (NumberFormatException e) {
-        // return "0";
-        // }
     }
 
     // 用于读取一个基本数据单元，可能是word、number、bool或list、expression

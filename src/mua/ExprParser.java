@@ -1,7 +1,6 @@
 package mua;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -23,12 +22,7 @@ public class ExprParser {
     }
 
     public String parsePrefix(String expression, Variable variable) {
-        // String tmp = expression.substring(1, expression.length() - 1);
-        // tmp = tmp.replace("(", " ( ");
-        // tmp = tmp.replace(")", " ) ");
-        // ArrayList<String> list = new ArrayList<>(Arrays.asList(tmp.split("\\s+")));
         ArrayList<String> list = preprocess(expression);
-        // ArrayList<String> result = new ArrayList<>();
         Iterator<String> it = list.iterator();
         String result = "";
 
@@ -108,37 +102,9 @@ public class ExprParser {
             arg = parse(word, it, variable);
             args.add(arg);
         }
-        // 默认使用全局变量池解析
-        // try {
+
         return op.execute(args, variable);
-        // } catch (NumberFormatException e) {
-        // return "0";
-        // }
     }
-
-    // public String readNext(Iterator<String> it) {
-    // // 只有list需要进行多次读取
-    // String word = it.next();
-    // String wordBuffer = "";
-    // int num = 0;
-
-    // // 注意，读入的第一个word本身可能含有多个”[“和”]“，因此首先初始化num为两者的个数差，再做表平衡
-    // num = countSymbolNum(word, "(") - countSymbolNum(word, ")");
-
-    // while (num != 0) {
-    // wordBuffer = it.next();
-    // if (wordBuffer.contains("(")) {
-    // num += countSymbolNum(wordBuffer, "(");
-    // }
-    // // 不能用else，可能wordBuffer里同时有"["和"]"
-    // if (wordBuffer.contains(")")) {
-    // num -= countSymbolNum(wordBuffer, ")");
-    // }
-    // word += " " + wordBuffer;
-    // }
-
-    // return word;
-    // }
 
     // 用于读取一个基本数据单元，可能是word、number、bool或list、expression
     // 这里主要是为了读取list写的函数，根据"["和"]"个数是否相等来判断是否读取完毕，即表平衡

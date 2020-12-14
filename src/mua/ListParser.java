@@ -107,36 +107,9 @@ public class ListParser {
             arg = parse(word, it, variable);
             args.add(arg);
         }
-        // try {
+
         return op.execute(args, variable);
-        // } catch (NumberFormatException e) {
-        // return "0";
-        // }
     }
-
-    // public String readNext(Iterator<String> it) {
-    // // 只有list需要进行多次读取
-    // String word = it.next();
-    // String wordBuffer = "";
-    // int num = 0;
-
-    // // 注意，读入的第一个word本身可能含有多个”[“和”]“，因此首先初始化num为两者的个数差，再做表平衡
-    // num = countSymbolNum(word, "[") - countSymbolNum(word, "]");
-
-    // while (num != 0) {
-    // wordBuffer = it.next();
-    // if (wordBuffer.contains("[")) {
-    // num += countSymbolNum(wordBuffer, "[");
-    // }
-    // // 不能用else，可能wordBuffer里同时有"["和"]"
-    // if (wordBuffer.contains("]")) {
-    // num -= countSymbolNum(wordBuffer, "]");
-    // }
-    // word += " " + wordBuffer;
-    // }
-
-    // return word;
-    // }
 
     // 用于读取一个基本数据单元，可能是word、number、bool或list、expression
     // 这里主要是为了读取list写的函数，根据"["和"]"个数是否相等来判断是否读取完毕，即表平衡
