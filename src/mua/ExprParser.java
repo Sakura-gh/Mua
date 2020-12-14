@@ -239,7 +239,12 @@ public class ExprParser {
             // 如果扫描到字面量或数字，则直接压入数字栈
             if (op == ExprOp.OTHER) {
                 if (str.charAt(0) == ':') {
-                    numStack.push(Double.valueOf(variable.getValue(str.substring(1))));
+                    // 如果在局部变量池中找不到对应变量，则去全局变量池中寻找，暂不考虑全局变量池中也不存在的情况
+                    String value = variable.getValue(str.substring(1));
+                    if (value == null) {
+                        value = globalVariable.getValue(str.substring(1));
+                    }
+                    numStack.push(Double.valueOf(value));
                 } else {
                     numStack.push(Double.valueOf(str));
                 }

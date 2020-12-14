@@ -180,16 +180,16 @@ public enum Operator {
             return result;
         }
     },
-    REPEAT("repeat", 2) {
-        @Override
-        public String execute(ArrayList<String> args, Variable variable) {
-            String result = "";
-            for (int i = 0; i < Integer.parseInt(args.get(0)); i++) {
-                result = listParser.ParserFromList(args.get(1), variable);
-            }
-            return result;
-        }
-    },
+    // REPEAT("repeat", 2) {
+    // @Override
+    // public String execute(ArrayList<String> args, Variable variable) {
+    // String result = "";
+    // for (int i = 0; i < Integer.parseInt(args.get(0)); i++) {
+    // result = listParser.ParserFromList(args.get(1), variable);
+    // }
+    // return result;
+    // }
+    // },
     IF("if", 3) {
         @Override
         public String execute(ArrayList<String> args, Variable variable) {
