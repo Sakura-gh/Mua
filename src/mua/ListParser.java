@@ -48,16 +48,26 @@ public class ListParser {
         ArrayList<String> args = new ArrayList<>();
         Operator op = Operator.getOperator(symbol);
 
-        // 如果symbol是系统函数(OP)，则查看是否是自定义函数(是否存在于名字空间里)
+        // 如果symbol不是系统函数(OP)，则查看是否是自定义函数(是否存在于名字空间里)
         if (op.name().equals("OTHER")) {
-            // 如果symbol也不存在于名字空间中，则直接返回symbol本身的值
-            if (!Boolean.valueOf(globalVariable.exsitKey(symbol))) {
+            // 如果symbol既不是全局变量池中的自定义函数，也不是局部变量池中作为参数的的函数名，则直接返回symbol本身的值
+            if (!Boolean.valueOf(globalVariable.exsitKey(symbol)) && !Boolean.valueOf(variable.exsitKey(symbol))) {
                 return symbol;
             }
             // 解析成hashmap传进去，第一个参数是函数体，第二个参数是hashmap
             // 如果symbol存在于名字空间，暂且认为它就是自定义函数，直接把函数名作为参数传给operator执行
 
+            // 首先查看是否是在全局变量池中用户自定义的函数
             String func = globalVariable.getValue(symbol);
+            // 其次查看是否是作为参数传入局部变量池的函数
+            if (func == null) {
+                func = variable.getValue(symbol);
+            }
+            // 如果该函数名既不是系统函数也不是自定义函数或函数参数，则报error
+            if (func == null) {
+                System.out.println("the function not exists!");
+            }
+
             String funcParam = "";
             String funcBody = "";
             // 提取出表中的函数参数和函数体
@@ -97,8 +107,11 @@ public class ListParser {
             arg = parse(word, it, variable);
             args.add(arg);
         }
-
+        // try {
         return op.execute(args, variable);
+        // } catch (NumberFormatException e) {
+        // return "0";
+        // }
     }
 
     // public String readNext(Iterator<String> it) {

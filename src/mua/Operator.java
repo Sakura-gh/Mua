@@ -208,14 +208,38 @@ public enum Operator {
     EQUAL("eq", 2) {
         @Override
         public String execute(ArrayList<String> args, Variable variable) {
-            // 避免实际上相等的int和double比较返回false，这里先将两个操作数转化为double再做比较
-            return String.valueOf(Double.valueOf(args.get(0)).equals(Double.valueOf(args.get(1))));
+            // return String.valueOf(args.get(0).equals(args.get(1)));
+
+            // if (Character.isDigit(args.get(0).charAt(0))) {
+            // // 避免实际上相等的int和double比较返回false，这里先将两个操作数转化为double再做比较
+            // return
+            // String.valueOf(Double.valueOf(args.get(0).trim()).equals(Double.valueOf(args.get(1).trim())));
+            // } else {
+            // // 非数字情况的判断
+            // return String.valueOf(args.get(0).equals(args.get(1)));
+            // }
+
+            // 注意两个比较对象可能不一定是数字，因此用try-catch来判别两种情况
+            try {
+                // 避免实际上相等的int和double比较返回false，这里先将两个操作数转化为double再做比较
+                return String.valueOf(Double.valueOf(args.get(0)).equals(Double.valueOf(args.get(1))));
+            } catch (NumberFormatException e) {
+                // 非数字情况的判断
+                return String.valueOf(args.get(0).equals(args.get(1)));
+            }
         }
     },
     GREATERTHAN("gt", 2) {
         @Override
         public String execute(ArrayList<String> args, Variable variable) {
-            int result = args.get(0).compareTo(args.get(1));
+            int result;
+            try {
+                // 如果比较的两个对象都是数字，则将它们都转化成double再进行比较(避免int和double比较造成错误)
+                result = Double.valueOf(args.get(0)).compareTo(Double.valueOf(args.get(1)));
+            } catch (NumberFormatException e) {
+                // 如果比较的对象有一个不是数字，则会抛出异常，此时直接对字符串进行比较即可
+                result = args.get(0).compareTo(args.get(1));
+            }
             if (result > 0)
                 return String.valueOf(true);
             else
@@ -225,7 +249,14 @@ public enum Operator {
     LESSTHAN("lt", 2) {
         @Override
         public String execute(ArrayList<String> args, Variable variable) {
-            int result = args.get(0).compareTo(args.get(1));
+            int result;
+            try {
+                // 如果比较的两个对象都是数字，则将它们都转化成double再进行比较(避免int和double比较造成错误)
+                result = Double.valueOf(args.get(0)).compareTo(Double.valueOf(args.get(1)));
+            } catch (NumberFormatException e) {
+                // 如果比较的对象有一个不是数字，则会抛出异常，此时直接对字符串进行比较即可
+                result = args.get(0).compareTo(args.get(1));
+            }
             if (result < 0)
                 return String.valueOf(true);
             else
