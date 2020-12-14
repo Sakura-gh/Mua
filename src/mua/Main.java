@@ -17,6 +17,7 @@ public class Main {
         Operator.setParser(parser);
         Operator.setListParser(listParser);
         Operator.setExprParser(exprParser);
+        Operator.setGlobalVariable(globalVariable);
 
         parser.ParserFromTerminal();
         in.close();

@@ -47,15 +47,50 @@ public class ExprParser {
     }
 
     public String exec(String symbol, Iterator<String> it, Variable variable) {
+        ArrayList<String> args = new ArrayList<>();
         Operator op = Operator.getOperator(symbol);
 
-        // 如果symbol是非OP，则直接返回symbol本身的值
+        // 如果symbol是系统函数(OP)，则查看是否是自定义函数(是否存在于名字空间里)
         if (op.name().equals("OTHER")) {
-            return symbol;
+            // 如果symbol也不存在于名字空间中，则直接返回symbol本身的值
+            if (!Boolean.valueOf(globalVariable.exsitKey(symbol))) {
+                return symbol;
+            }
+            // 解析成hashmap传进去，第一个参数是函数体，第二个参数是hashmap
+            // 如果symbol存在于名字空间，暂且认为它就是自定义函数，直接把函数名作为参数传给operator执行
+
+            String func = globalVariable.getValue(symbol);
+            String funcParam = "";
+            String funcBody = "";
+            // 提取出表中的函数参数和函数体
+            for (int i = 0; i < func.length(); i++) {
+                if (func.charAt(i) == ']') {
+                    funcParam = func.substring(1, i + 1).trim();
+                    funcBody = func.substring(i + 1, func.length() - 1).trim();
+                    args.add(funcBody);
+                    break;
+                }
+            }
+
+            // 创建表的局部变量
+            Variable localVariable = new Variable();
+            String[] params = funcParam.substring(1, funcParam.length() - 1).trim().split("\\s+");
+            String paramName, paramValue;
+            for (int i = 0; i < params.length; i++) {
+                // 如果函数表为空，则params会有且只有一个空字符串元素，故要排除这种情况
+                if (!params[i].equals("")) {
+                    paramName = params[i];
+                    // 使用上一级函数的变量池解析！！！
+                    paramValue = parse(readNext(it), it, variable);
+                    localVariable.addMap(paramName, paramValue);
+                }
+            }
+
+            // 执行
+            return Operator.FUNC.execute(args, localVariable);
         }
 
         int argNum = op.getArgNum();
-        ArrayList<String> args = new ArrayList<>();
         String word, arg;
 
         for (int i = 0; i < argNum; i++) {
@@ -67,27 +102,68 @@ public class ExprParser {
         return op.execute(args, variable);
     }
 
+    // public String readNext(Iterator<String> it) {
+    // // 只有list需要进行多次读取
+    // String word = it.next();
+    // String wordBuffer = "";
+    // int num = 0;
+
+    // // 注意，读入的第一个word本身可能含有多个”[“和”]“，因此首先初始化num为两者的个数差，再做表平衡
+    // num = countSymbolNum(word, "(") - countSymbolNum(word, ")");
+
+    // while (num != 0) {
+    // wordBuffer = it.next();
+    // if (wordBuffer.contains("(")) {
+    // num += countSymbolNum(wordBuffer, "(");
+    // }
+    // // 不能用else，可能wordBuffer里同时有"["和"]"
+    // if (wordBuffer.contains(")")) {
+    // num -= countSymbolNum(wordBuffer, ")");
+    // }
+    // word += " " + wordBuffer;
+    // }
+
+    // return word;
+    // }
+
+    // 用于读取一个基本数据单元，可能是word、number、bool或list、expression
+    // 这里主要是为了读取list写的函数，根据"["和"]"个数是否相等来判断是否读取完毕，即表平衡
+    // 添加读取中缀表达式(+-*/)的功能，这里把整个()包含的中缀表达式当做整体读进来
     public String readNext(Iterator<String> it) {
         // 只有list需要进行多次读取
         String word = it.next();
-        String wordBuffer = "";
-        int num = 0;
 
-        // 注意，读入的第一个word本身可能含有多个”[“和”]“，因此首先初始化num为两者的个数差，再做表平衡
-        num = countSymbolNum(word, "(") - countSymbolNum(word, ")");
-
-        while (num != 0) {
-            wordBuffer = it.next();
-            if (wordBuffer.contains("(")) {
-                num += countSymbolNum(wordBuffer, "(");
-            }
-            // 不能用else，可能wordBuffer里同时有"["和"]"
-            if (wordBuffer.contains(")")) {
-                num -= countSymbolNum(wordBuffer, ")");
-            }
-            word += " " + wordBuffer;
+        // 读取list []
+        if (word.charAt(0) == '[') {
+            word = symbolBalance(it, word, "[", "]", " ");
+        }
+        // 读取expression ()
+        else if (word.charAt(0) == '(') {
+            word = symbolBalance(it, word, "(", ")", " ");
         }
 
+        return word;
+    }
+
+    // 表平衡
+    public String symbolBalance(Iterator<String> it, String word, String symbol1, String symbol2, String space) {
+        String wordBuffer = "";
+        int num = 0;
+        // 注意，读入的第一个word本身可能含有多个symbol1和symbol2，因此首先初始化num为两者的个数差，再做表平衡
+        num = countSymbolNum(word, symbol1) - countSymbolNum(word, symbol2);
+
+        // 如果num不等于0，说明word中的"["和"]"个数不平衡，需要继续读取直至表中的"["和"]"个数平衡
+        while (num != 0) {
+            wordBuffer = it.next();
+            if (wordBuffer.contains(symbol1)) {
+                num += countSymbolNum(wordBuffer, symbol1);
+            }
+            // 不能用else，可能wordBuffer里同时有"["和"]"
+            if (wordBuffer.contains(symbol2)) {
+                num -= countSymbolNum(wordBuffer, symbol2);
+            }
+            word += space + wordBuffer;
+        }
         return word;
     }
 
@@ -102,7 +178,11 @@ public class ExprParser {
         String arg = "";
         // 如果是:标记的字面量，则取出该字面量的值作为参数传入arg
         if (word.charAt(0) == ':') {
+            // 在函数中访问（读取）变量的值的时候，首先访问本地，如果本地不存在，则访问全局
             arg = variable.getValue(word.substring(1));
+            if (arg == null) {
+                arg = globalVariable.getValue(word.substring(1));
+            }
         }
         // 如果是数字(包含负数)，则直接作为参数传入arg
         else if (Character.isDigit(word.charAt(0)) || word.charAt(0) == '-') {

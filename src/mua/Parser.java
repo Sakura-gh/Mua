@@ -35,8 +35,8 @@ public class Parser {
 
     // 根据符号来解析操作符，并根据操作符读入所需的操作数，调用Operator进行运算并返回结果
     public String exec(String symbol) {
-        Operator op = Operator.getOperator(symbol);
         ArrayList<String> args = new ArrayList<>();
+        Operator op = Operator.getOperator(symbol);
         // // 如果symbol是非OP，则直接返回symbol本身的值
         // if (op.name().equals("OTHER")) {
         // return symbol;
@@ -69,15 +69,17 @@ public class Parser {
             String[] params = funcParam.substring(1, funcParam.length() - 1).trim().split("\\s+");
             String paramName, paramValue;
             for (int i = 0; i < params.length; i++) {
-                paramName = params[i];
-                // 使用局部变量池解析
-                paramValue = parse(readNext(), localVariable);
-                localVariable.addMap(paramName, paramValue);
+                // 如果函数表为空，则params会有且只有一个空字符串元素，故要排除这种情况
+                if (!params[i].equals("")) {
+                    paramName = params[i];
+                    // 从全局变量池中解析出赋给局部变量的值！！！
+                    paramValue = parse(readNext(), globalVariable);
+                    localVariable.addMap(paramName, paramValue);
+                }
             }
 
             // 执行
-            Operator.FUNC.execute(args, localVariable);
-
+            return Operator.FUNC.execute(args, localVariable);
         }
 
         int argNum = op.getArgNum();
@@ -150,7 +152,11 @@ public class Parser {
         }
         // 如果是:标记的字面量，则取出该字面量的值作为参数传入arg
         else if (word.charAt(0) == ':') {
+            // 在函数中访问（读取）变量的值的时候，首先访问本地，如果本地不存在，则访问全局
             arg = variable.getValue(word.substring(1));
+            if (arg == null) {
+                arg = globalVariable.getValue(word.substring(1));
+            }
         }
         // 如果是数字(包含负数)，则直接作为参数传入arg
         else if (Character.isDigit(word.charAt(0)) || word.charAt(0) == '-') {

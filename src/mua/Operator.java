@@ -3,10 +3,24 @@ package mua;
 import java.util.ArrayList;
 
 public enum Operator {
-    FUNC("", 0) {
+    FUNC("", 1) {
         @Override
         public String execute(ArrayList<String> args, Variable variable) {
-            return null;
+            // args[0]里存放的是函数体，variable里存放的是函数局部变量池
+            return listParser.ParserFromList(args.get(0), variable);
+        }
+    },
+    RETURN("return", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            return args.get(0);
+        }
+    },
+    EXPORT("export", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            globalVariable.addMap(args.get(0), variable.getValue(args.get(0)));
+            return variable.getValue(args.get(0));
         }
     },
     MAKE("make", 2) {
@@ -194,7 +208,8 @@ public enum Operator {
     EQUAL("eq", 2) {
         @Override
         public String execute(ArrayList<String> args, Variable variable) {
-            return String.valueOf(args.get(0).equals(args.get(1)));
+            // 避免实际上相等的int和double比较返回false，这里先将两个操作数转化为double再做比较
+            return String.valueOf(Double.valueOf(args.get(0)).equals(Double.valueOf(args.get(1))));
         }
     },
     GREATERTHAN("gt", 2) {
@@ -246,6 +261,7 @@ public enum Operator {
     private static Parser parser;
     private static ListParser listParser;
     private static ExprParser exprParser;
+    private static Variable globalVariable;
 
     public static void setParser(Parser parser) {
         Operator.parser = parser;
@@ -257,6 +273,10 @@ public enum Operator {
 
     public static void setExprParser(ExprParser exprParser) {
         Operator.exprParser = exprParser;
+    }
+
+    public static void setGlobalVariable(Variable globalVariable) {
+        Operator.globalVariable = globalVariable;
     }
 
     public static Operator getOperator(String symbol) {
