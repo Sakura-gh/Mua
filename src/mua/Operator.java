@@ -1,6 +1,12 @@
 package mua;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Arrays;
 
 public enum Operator {
     FUNC("", 1) {
@@ -45,7 +51,12 @@ public enum Operator {
     PRINT("print", 1) {
         @Override
         public String execute(ArrayList<String> args, Variable variable) {
-            System.out.println(args.get(0));
+            // 如果是表，则不打印外层的[]；如果是其他类型，直接打印值即可
+            if (args.get(0).charAt(0) == '[' && args.get(0).charAt(args.get(0).length() - 1) == ']') {
+                System.out.println(args.get(0).substring(1, args.get(0).length() - 1).trim());
+            } else {
+                System.out.println(args.get(0));
+            }
             return args.get(0);
         }
     },
@@ -279,6 +290,178 @@ public enum Operator {
         @Override
         public String execute(ArrayList<String> args, Variable variable) {
             return String.valueOf(!Boolean.parseBoolean(args.get(0)));
+        }
+    },
+    WORD("word", 2) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            // 第一个参数必须是word，第二个参数可以是word/number/bool，并实现两个参数的拼接
+            return args.get(0) + args.get(1);
+        }
+    },
+    SENTENCE("sentence", 2) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            // 把不同操作数里的内容连接合并成一个新的表，操作数可能是表，也可能是其他类型
+            String arg0 = args.get(0);
+            String arg1 = args.get(1);
+            // 如果操作数是表，则先提取表里的所有元素(去除外层的[]); 如果不是表，直接取值即可
+            if (arg0.charAt(0) == '[' && arg0.charAt(arg0.length() - 1) == ']') {
+                arg0 = arg0.substring(1, arg0.length() - 1).trim();
+            }
+            if (arg1.charAt(0) == '[' && arg1.charAt(arg1.length() - 1) == ']') {
+                arg1 = arg1.substring(1, arg1.length() - 1).trim();
+            }
+            return "[" + arg0 + " " + arg1 + "]";
+        }
+    },
+    LIST("list", 2) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            // 与sentence不同的是，list是把整个操作数作为单个元素合并到新表中，即不对表操作数做拆分
+            return "[" + args.get(0) + " " + args.get(1) + "]";
+        }
+    },
+    JOIN("join", 2) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            // 第一个参数必须是表，把第二个参数(可以是任何类型)添加为该表的最后一个元素
+            return args.get(0).substring(0, args.get(0).length() - 1).trim() + " " + args.get(1) + "]";
+        }
+    },
+    FIRST("first", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            // 返回word的第一个字符，或list的第一个元素
+            // 注意，对list来说，不能简单用空格的split划分，要考虑[[a b] ...]中[a b]整体作为一个元素
+            String arg = args.get(0);
+            if (arg.charAt(0) == '[' && arg.charAt(arg.length() - 1) == ']') {
+                ArrayList<String> words = new ArrayList<>(
+                        Arrays.asList(arg.substring(1, arg.length() - 1).trim().split("\\s+")));
+                return listParser.readNext(words.iterator());
+            } else {
+                return String.valueOf(arg.charAt(0));
+            }
+        }
+    },
+    LAST("last", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            // 返回word的最后一个字符，或list的最后一个元素
+            String arg = args.get(0);
+            if (arg.charAt(0) == '[' && arg.charAt(arg.length() - 1) == ']') {
+                ArrayList<String> words = new ArrayList<>(
+                        Arrays.asList(arg.substring(1, arg.length() - 1).trim().split("\\s+")));
+                Iterator<String> it = words.iterator();
+                String result = "";
+                while (it.hasNext()) {
+                    result = listParser.readNext(it); // 一个readnext(it)里可能包含多个it.next()
+                }
+                return result;
+            } else {
+                return String.valueOf(arg.charAt(arg.length() - 1));
+            }
+        }
+    },
+    BUTFIRST("butfirst", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            // 返回除第一个元素外剩下的表，或除第一个字符外剩下的字
+            String arg = args.get(0);
+            if (arg.charAt(0) == '[' && arg.charAt(arg.length() - 1) == ']') {
+                ArrayList<String> words = new ArrayList<>(
+                        Arrays.asList(arg.substring(1, arg.length() - 1).trim().split("\\s+")));
+                Iterator<String> it = words.iterator();
+                String result = "[";
+                listParser.readNext(it); // 先消耗掉表中的第一个元素，可能是普通变量，也可能是表
+                while (it.hasNext()) {
+                    result += listParser.readNext(it) + " "; // 读完表中剩余的元素
+                }
+                result = result.trim() + "]";
+                return result;
+            } else {
+                return arg.substring(1);
+            }
+        }
+    },
+    BUTLAST("butlast", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            // 返回除最后一个元素外剩下的表，或除最后一个字符外剩下的字
+            String arg = args.get(0);
+            if (arg.charAt(0) == '[' && arg.charAt(arg.length() - 1) == ']') {
+                ArrayList<String> words = new ArrayList<>(
+                        Arrays.asList(arg.substring(1, arg.length() - 1).trim().split("\\s+")));
+                Iterator<String> it = words.iterator();
+                String result = "[";
+                String last = "";
+                String next = "";
+                // 保证最后一个元素不被合进result里，使用readNext()是为了把内部的整个表作为单个元素读取
+                if (it.hasNext())
+                    last = listParser.readNext(it);
+                while (it.hasNext()) {
+                    next = listParser.readNext(it);
+                    result += last + " ";
+                    last = next;
+                }
+                result = result.trim() + "]";
+                return result;
+            } else {
+                return arg.substring(0, arg.length() - 1);
+            }
+        }
+    },
+    RANDOM("random", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            return String.valueOf(Math.random() * Double.valueOf(args.get(0)));
+        }
+    },
+    INT("int", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            // 注意，不能使用Integer.valueOf(Double)，但是可以直接调用Double类的intValue()函数获取int部分的值
+            return String.valueOf(Double.valueOf(args.get(0)).intValue());
+        }
+    },
+    SQRT("sqrt", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            return String.valueOf(Math.sqrt(Double.valueOf(args.get(0))));
+        }
+    },
+    SAVE("save", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            globalVariable.saveVariable(args.get(0));
+            return args.get(0);
+        }
+    },
+    LOAD("load", 1) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            try {
+                Scanner in = new Scanner(new FileInputStream(args.get(0)));
+                Parser loadParser = new Parser(listParser, exprParser, in, globalVariable);
+                loadParser.ParserFromStream();
+            } catch (IOException e) {
+                System.out.println("load error!");
+            }
+
+            return String.valueOf(true);
+        }
+    },
+    ERALL("erall", 0) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            globalVariable.clearVariable();
+            return String.valueOf(true);
+        }
+    },
+    POALL("poall", 0) {
+        @Override
+        public String execute(ArrayList<String> args, Variable variable) {
+            return globalVariable.getVarible();
         }
     },
     OTHER("", 0) {
