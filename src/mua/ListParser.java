@@ -133,6 +133,7 @@ public class ListParser {
     // 表平衡
     public String symbolBalance(Iterator<String> it, String word, String symbol1, String symbol2, String space) {
         String wordBuffer = "";
+        String lastWordBuffer = word;
         int num = 0;
         // 注意，读入的第一个word本身可能含有多个symbol1和symbol2，因此首先初始化num为两者的个数差，再做表平衡
         num = countSymbolNum(word, symbol1) - countSymbolNum(word, symbol2);
@@ -147,9 +148,28 @@ public class ListParser {
             if (wordBuffer.contains(symbol2)) {
                 num -= countSymbolNum(wordBuffer, symbol2);
             }
-            word += space + wordBuffer;
+            // 规范化读入的表格式，避免出现[ aa 1]这样的空格现象
+            if (checkListBorder(lastWordBuffer, symbol1)) {
+                word += wordBuffer;
+            } else if (checkListBorder(wordBuffer, symbol2)) {
+                word = word.trim() + wordBuffer;
+            } else {
+                word += space + wordBuffer;
+            }
+            lastWordBuffer = wordBuffer;
         }
         return word;
+    }
+
+    // 检查word中是否都是连续的symbol，比如都是]]]]]，方便做读表时的标准格式化
+    public boolean checkListBorder(String word, String symbol) {
+        int len = symbol.length();
+        for (int i = 0; i <= word.length() - len; i++) {
+            if (!word.substring(i, i + len).equals(symbol)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // 返回字符串S中包含符号c的个数
