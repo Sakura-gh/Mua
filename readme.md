@@ -146,25 +146,25 @@ make "prt [
 
 - Mua-v1.0
 
-    <center><img src="./img/mua-v1.png" width="60%;"></center>
+    <center><img src="./img/mua-v1.png" width="80%;"></center>
     
 - Mua-v2.0
 
-    <center><img src="./img/mua-v2.png" width="60%;"></center>
+    <center><img src="./img/mua-v2.png" width="80%;"></center>
     
 - Mua-v3.0
 
     - self-define function:
 
-	<center><img src="./img/mua-v3-1.png" width="60%;"></center>
+	<center><img src="./img/mua-v3-1.png" width="80%;"></center>
 
     - programming function:
 
-	<center><img src="./img/mua-v3-1.png" width="60%;"></center>
+	<center><img src="./img/mua-v3-2.png" width="80%;"></center>
 	
 - Mua-v4.0
 
-    <center><img src="./img/mua-v4.png" width="60%;"></center>
+    <center><img src="./img/mua-v4.png" width="80%;"></center>
 
     
 
